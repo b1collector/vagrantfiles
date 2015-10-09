@@ -1,0 +1,40 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+
+    hostname = "rabbitmq.box"
+    locale = "en_US.UTF.8"
+
+    # Box
+    config.vm.box = "ubuntu/trusty64"
+    config.vm.hostname = "rabbitmq"
+
+    # Network
+    config.vm.network :forwarded_port, guest: 5672, host: 5672
+    config.vm.network :forwarded_port, guest: 15672, host: 15672
+
+    # Shared folders
+    config.vm.synced_folder ".", "/srv"
+
+    # Setup
+    config.vm.provision :shell, :inline => "touch .hushlogin"
+    config.vm.provision :shell, :inline => "hostnamectl set-hostname #{hostname} && locale-gen #{locale}"
+    config.vm.provision :shell, :inline => "apt-get update --fix-missing"
+    config.vm.provision :shell, :inline => "apt-get install -q -y g++ make git curl vim"
+
+    # Install stack
+    config.vm.provision :shell, :inline => "echo 'deb http://rabbitmq.com/debian/ testing main' >> /etc/apt/sources.list"
+    config.vm.provision :shell, :inline => "wget -q -O- https://www.rabbitmq.com/rabbitmq-signing-key-public.asc | apt-key add -"
+    config.vm.provision :shell, :inline => "apt-get update && apt-get install -y -q rabbitmq-server"
+    config.vm.provision :shell, :inline => "rabbitmq-plugins enable rabbitmq_management"
+    config.vm.provision :shell, :inline => "cp /srv/rabbitmq.config /etc/rabbitmq/rabbitmq.config"
+
+    # config.vm.provision :shell, :inline => "if [ -e '/srv/init.sh' ]; then sh /srv/init.sh; if"
+
+    config.vm.provision :shell, :inline => "service rabbitmq-server restart"
+
+    config.vm.provider "virtualbox" do |v|
+        v.memory = 1024
+    end
+end
