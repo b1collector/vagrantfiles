@@ -4,7 +4,7 @@
 Vagrant.configure(2) do |config|
 
   hostname = "mongo.box"
-  local = "en_US.UTF.8"
+  locale = "en_US.UTF.8"
 
 
   # Box
